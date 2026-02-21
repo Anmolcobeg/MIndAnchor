@@ -1,68 +1,60 @@
-document.addEventListener("DOMContentLoaded", function () {
+let tasks = JSON.parse(localStorage.getItem("stufoTasks")) || [];
 
-  const taskInput = document.getElementById("taskInput");
-  const addBtn = document.getElementById("addBtn");
+function saveTasks() {
+  localStorage.setItem("stufoTasks", JSON.stringify(tasks));
+}
+
+function renderTasks() {
   const taskList = document.getElementById("taskList");
+  taskList.innerHTML = "";
 
-  let tasks = JSON.parse(localStorage.getItem("stufo_tasks")) || [];
+  tasks.forEach((task, index) => {
+    const li = document.createElement("li");
+    if (task.completed) li.classList.add("completed");
 
-  function saveTasks() {
-    localStorage.setItem("stufo_tasks", JSON.stringify(tasks));
-  }
+    li.innerHTML = `
+      <div>
+        <input type="checkbox" ${task.completed ? "checked" : ""} 
+          onchange="toggleTask(${index})" />
+        <span>${task.text}</span>
+        <div class="task-time">${task.time || ""}</div>
+      </div>
+      <button onclick="deleteTask(${index})">X</button>
+    `;
 
-  function renderTasks() {
-    taskList.innerHTML = "";
+    taskList.appendChild(li);
+  });
+}
 
-    tasks.forEach((task, index) => {
-      const li = document.createElement("li");
-      li.style.display = "flex";
-      li.style.justifyContent = "space-between";
-      li.style.alignItems = "center";
-      li.style.marginBottom = "8px";
+function addTask() {
+  const text = document.getElementById("taskInput").value;
+  const time = document.getElementById("taskTime").value;
 
-      const taskText = document.createElement("span");
-      taskText.textContent = task;
-      taskText.style.cursor = "pointer";
+  if (!text.trim()) return;
 
-      // Click task → open focus page
-      taskText.addEventListener("click", function () {
-        localStorage.setItem("currentTask", task);
-        window.location.href = "focus.html";
-      });
-
-      const deleteBtn = document.createElement("button");
-      deleteBtn.textContent = "❌";
-
-      deleteBtn.addEventListener("click", function () {
-        tasks.splice(index, 1);
-        saveTasks();
-        renderTasks();
-      });
-
-      li.appendChild(taskText);
-      li.appendChild(deleteBtn);
-      taskList.appendChild(li);
-    });
-  }
-
-  function addTask() {
-    const task = taskInput.value.trim();
-    if (task === "") return;
-
-    tasks.push(task);
-    saveTasks();
-    taskInput.value = "";
-    renderTasks();
-  }
-
-  addBtn.addEventListener("click", addTask);
-
-  // Press Enter to add
-  taskInput.addEventListener("keypress", function (e) {
-    if (e.key === "Enter") {
-      addTask();
-    }
+  tasks.push({
+    text: text,
+    time: time,
+    completed: false
   });
 
+  document.getElementById("taskInput").value = "";
+  document.getElementById("taskTime").value = "";
+
+  saveTasks();
   renderTasks();
-});
+}
+
+function toggleTask(index) {
+  tasks[index].completed = !tasks[index].completed;
+  saveTasks();
+  renderTasks();
+}
+
+function deleteTask(index) {
+  tasks.splice(index, 1);
+  saveTasks();
+  renderTasks();
+}
+
+renderTasks();
